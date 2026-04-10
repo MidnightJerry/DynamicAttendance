@@ -2,10 +2,9 @@ name: Build Attendance App
 
 on:
   push:
-    branches: [ master, main ]  # Run on every push
     tags:
-      - 'v*'  # Also run on tags
-  workflow_dispatch:  # Manual trigger # Allows manual trigger
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,37 +22,38 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Build with Gradle (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+        shell: bash
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build with Gradle (Windows)
+        if: runner.os == 'Windows'
+        run: ./gradlew build --no-daemon
+        shell: cmd
 
-      - name: Zip the artifact (Windows)
+      - name: Create ZIP (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir dist
+          cp build/libs/*.jar dist/
+          cd dist
+          zip -r ../DynamicAttendance-${{ runner.os }}.zip .
+        shell: bash
+
+      - name: Create ZIP (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd build/image
-          Compress-Archive -Path * -DestinationPath AttendanceApp-Windows.zip
-          mv AttendanceApp-Windows.zip ../../
-
-      - name: Zip the artifact (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          cd build/image
-          zip -r AttendanceApp-macOS.zip *
-          mv AttendanceApp-macOS.zip ../../
-
-      - name: Zip the artifact (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          cd build/image
-          zip -r AttendanceApp-Linux.zip *
-          mv AttendanceApp-Linux.zip ../../
+          mkdir dist
+          copy build\libs\*.jar dist\
+          powershell Compress-Archive -Path dist\* -DestinationPath DynamicAttendance-Windows.zip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: attendance-app-${{ runner.os }}
+          name: DynamicAttendance-${{ runner.os }}
           path: |
-            AttendanceApp-*.zip
-            build/image/
+            DynamicAttendance-*.zip
+            build/libs/*.jar
