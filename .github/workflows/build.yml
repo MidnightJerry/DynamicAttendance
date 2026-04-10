@@ -2,9 +2,10 @@ name: Build Attendance App
 
 on:
   push:
+    branches: [ master, main ]  # Run on every push
     tags:
-      - 'v*'
-  workflow_dispatch:  # Allows manual trigger
+      - 'v*'  # Also run on tags
+  workflow_dispatch:  # Manual trigger # Allows manual trigger
 
 jobs:
   build:

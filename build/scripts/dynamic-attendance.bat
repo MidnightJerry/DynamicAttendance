@@ -70,11 +70,11 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\dynamic-attendance-1.0-SNAPSHOT.jar
-set MODULE_PATH=%APP_HOME%\lib\javafx-controls-16-win.jar;%APP_HOME%\lib\javafx-graphics-16-win.jar;%APP_HOME%\lib\javafx-graphics-16.jar;%APP_HOME%\lib\javafx-base-16-win.jar;%APP_HOME%\lib\javafx-base-16.jar
+set CLASSPATH=%APP_HOME%\lib\dynamic-attendance-1.0-SNAPSHOT.jar;%APP_HOME%\lib\javafx-controls-21-win.jar;%APP_HOME%\lib\javafx-swing-21-win.jar;%APP_HOME%\lib\javafx-graphics-21-win.jar;%APP_HOME%\lib\javafx-graphics-21.jar;%APP_HOME%\lib\javafx-base-21-win.jar;%APP_HOME%\lib\javafx-base-21.jar;%APP_HOME%\lib\javase-3.5.1.jar;%APP_HOME%\lib\core-3.5.1.jar;%APP_HOME%\lib\jcommander-1.82.jar;%APP_HOME%\lib\jai-imageio-core-1.4.0.jar
+
 
 @rem Execute dynamic-attendance
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %DYNAMIC_ATTENDANCE_OPTS%  -classpath "%CLASSPATH%" --module-path "%MODULE_PATH%" --module ca.pragmaticcoding.beginners/ca.pragmaticcoding.beginners.part1.Main %*
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %DYNAMIC_ATTENDANCE_OPTS%  -classpath "%CLASSPATH%" com.beng.attendance.Main %*
 
 :end
 @rem End local scope for the variables with windows NT shell

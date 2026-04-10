@@ -115,9 +115,7 @@ case "$( uname )" in                #(
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH=$APP_HOME/lib/dynamic-attendance-1.0-SNAPSHOT.jar
-
-MODULE_PATH=$APP_HOME/lib/javafx-controls-16-win.jar:$APP_HOME/lib/javafx-graphics-16-win.jar:$APP_HOME/lib/javafx-graphics-16.jar:$APP_HOME/lib/javafx-base-16-win.jar:$APP_HOME/lib/javafx-base-16.jar
+CLASSPATH=$APP_HOME/lib/dynamic-attendance-1.0-SNAPSHOT.jar:$APP_HOME/lib/javafx-controls-21-win.jar:$APP_HOME/lib/javafx-swing-21-win.jar:$APP_HOME/lib/javafx-graphics-21-win.jar:$APP_HOME/lib/javafx-graphics-21.jar:$APP_HOME/lib/javafx-base-21-win.jar:$APP_HOME/lib/javafx-base-21.jar:$APP_HOME/lib/javase-3.5.1.jar:$APP_HOME/lib/core-3.5.1.jar:$APP_HOME/lib/jcommander-1.82.jar:$APP_HOME/lib/jai-imageio-core-1.4.0.jar
 
 
 # Determine the Java command to use to start the JVM.
@@ -176,7 +174,7 @@ fi
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
-    MODULE_PATH=$( cygpath --path --mixed "$MODULE_PATH" )
+
     JAVACMD=$( cygpath --unix "$JAVACMD" )
 
     # Now convert the arguments - kludge to limit ourselves to /bin/sh
@@ -215,8 +213,7 @@ DEFAULT_JVM_OPTS=""
 
 set -- \
         -classpath "$CLASSPATH" \
-        --module-path "$MODULE_PATH" \
-        --module ca.pragmaticcoding.beginners/ca.pragmaticcoding.beginners.part1.Main \
+        com.beng.attendance.Main \
         "$@"
 
 # Stop when "xargs" is not available.
