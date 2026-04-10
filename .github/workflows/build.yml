@@ -1,4 +1,4 @@
-name: Build Native Executables
+name: Build Attendance App
 
 on:
   workflow_dispatch:
@@ -12,40 +12,78 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout with retry logic
+      - name: Checkout code
+        uses: actions/checkout@v3
+        continue-on-error: true
+        with:
+          fetch-depth: 1
 
+      - name: Retry checkout if failed
+        if: failure()
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      # Setup JDK
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build JAR file
-        run: ./gradlew jar
+      # Fix permissions for Unix
+      - name: Fix gradlew permissions
+        if: runner.os != 'Windows'
+        run: chmod +x gradlew
         shell: bash
 
+      # Build JAR - Windows
+      - name: Build JAR (Windows)
+        if: runner.os == 'Windows'
+        run: gradlew.bat jar --no-daemon --stacktrace
+        shell: cmd
+
+      # Build JAR - macOS/Linux
+      - name: Build JAR (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: ./gradlew jar --no-daemon --stacktrace
+        shell: bash
+
+      # Get JAR filename
       - name: Get JAR filename
         id: jar_name
         run: |
-          echo "jar_file=$(find build/libs -name "*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)" >> $GITHUB_OUTPUT
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            jar_file=$(find build/libs -name "*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+            echo "jar_file=${jar_file//\\//}" >> $GITHUB_OUTPUT
+          else
+            echo "jar_file=$(find build/libs -name "*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)" >> $GITHUB_OUTPUT
+          fi
         shell: bash
 
+      # Create Windows executable
       - name: Create Windows executable
         if: runner.os == 'Windows'
         run: |
           mkdir dist
           jpackage --type app-image `
             --input build/libs `
-            --main-jar ${{ steps.jar_name.outputs.jar_file }} `
+            --main-jar "${{ steps.jar_name.outputs.jar_file }}" `
             --main-class com.dynamicattendance.Main `
             --name AttendanceApp `
             --dest dist `
-            --win-console
-          Compress-Archive -Path dist\AttendanceApp -DestinationPath AttendanceApp-Windows.zip
+            --win-console `
+            --temp dist/temp
+          Compress-Archive -Path dist\AttendanceApp -DestinationPath AttendanceApp-Windows.zip -Force
+          Move-Item -Path AttendanceApp-Windows.zip -Destination ..\ -Force
         shell: powershell
+        working-directory: ${{ github.workspace }}
 
+      # Create macOS executable
       - name: Create macOS executable
         if: runner.os == 'macOS'
         run: |
@@ -55,9 +93,12 @@ jobs:
             --main-jar "${{ steps.jar_name.outputs.jar_file }}" \
             --main-class com.dynamicattendance.Main \
             --name AttendanceApp \
-            --dest dist
+            --dest dist \
+            --mac-package-name "Attendance QR"
           zip -r AttendanceApp-macOS.zip dist/AttendanceApp.app
+        shell: bash
 
+      # Create Linux executable
       - name: Create Linux executable
         if: runner.os == 'Linux'
         run: |
@@ -69,10 +110,31 @@ jobs:
             --name AttendanceApp \
             --dest dist
           zip -r AttendanceApp-Linux.zip dist/AttendanceApp
+        shell: bash
 
-      - name: Upload artifacts
+      # Upload Windows artifact
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: AttendanceApp-${{ runner.os }}
-          path: |
-            *.zip
+          name: AttendanceApp-Windows
+          path: AttendanceApp-Windows.zip
+          retention-days: 30
+
+      # Upload macOS artifact
+      - name: Upload macOS artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AttendanceApp-macOS
+          path: AttendanceApp-macOS.zip
+          retention-days: 30
+
+      # Upload Linux artifact
+      - name: Upload Linux artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AttendanceApp-Linux
+          path: AttendanceApp-Linux.zip
+          retention-days: 30
