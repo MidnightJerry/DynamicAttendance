@@ -28,13 +28,6 @@ javafx {
 dependencies {
     implementation 'com.google.zxing:core:3.5.1'
     implementation 'com.google.zxing:javase:3.5.1'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
-}
-
-test {
-    useJUnitPlatform()
 }
 
 // Create a fat JAR with all dependencies
@@ -45,5 +38,63 @@ jar {
     }
     manifest {
         attributes 'Main-Class': 'com.beng.attendance.Main'
+    }
+    archiveBaseName = 'AttendanceApp'
+    archiveVersion = ''
+
+    // Exclude signature files that can cause issues
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+}
+
+// Task to create native executable using jpackage
+tasks.register('createInstaller') {
+    dependsOn jar
+    doLast {
+        def os = System.getProperty('os.name').toLowerCase()
+        def outputDir = file("${buildDir}/installer")
+
+        // Delete existing output directory
+        delete outputDir
+        outputDir.mkdirs()
+
+        if (os.contains('win')) {
+            // Windows
+            exec {
+                commandLine 'jpackage',
+                        '--type', 'app-image',
+                        '--input', "${buildDir}/libs",
+                        '--main-jar', 'AttendanceApp.jar',
+                        '--main-class', 'com.beng.attendance.Main',
+                        '--name', 'AttendanceApp',
+                        '--dest', outputDir.absolutePath,
+                        '--win-console',
+                        '--vendor', 'DynamicAttendance'
+            }
+        } else if (os.contains('mac')) {
+            // macOS
+            exec {
+                commandLine 'jpackage',
+                        '--type', 'app-image',
+                        '--input', "${buildDir}/libs",
+                        '--main-jar', 'AttendanceApp.jar',
+                        '--main-class', 'com.beng.attendance.Main',
+                        '--name', 'AttendanceApp',
+                        '--dest', outputDir.absolutePath,
+                        '--mac-package-name', 'Attendance QR',
+                        '--vendor', 'DynamicAttendance'
+            }
+        } else {
+            // Linux
+            exec {
+                commandLine 'jpackage',
+                        '--type', 'app-image',
+                        '--input', "${buildDir}/libs",
+                        '--main-jar', 'AttendanceApp.jar',
+                        '--main-class', 'com.beng.attendance.Main',
+                        '--name', 'AttendanceApp',
+                        '--dest', outputDir.absolutePath,
+                        '--vendor', 'DynamicAttendance'
+            }
+        }
     }
 }
