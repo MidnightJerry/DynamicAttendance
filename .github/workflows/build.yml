@@ -1,0 +1,58 @@
+name: Build Attendance App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew jlink
+
+      - name: Zip the artifact (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd build/image
+          Compress-Archive -Path * -DestinationPath AttendanceApp-Windows.zip
+          mv AttendanceApp-Windows.zip ../../
+
+      - name: Zip the artifact (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd build/image
+          zip -r AttendanceApp-macOS.zip *
+          mv AttendanceApp-macOS.zip ../../
+
+      - name: Zip the artifact (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd build/image
+          zip -r AttendanceApp-Linux.zip *
+          mv AttendanceApp-Linux.zip ../../
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-app-${{ runner.os }}
+          path: |
+            AttendanceApp-*.zip
+            build/image/
