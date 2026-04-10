@@ -56,7 +56,6 @@ jobs:
             --main-class com.beng.attendance.Main ^
             --name AttendanceApp ^
             --dest dist ^
-            --win-console ^
             --vendor "DynamicAttendance"
           
           if exist "dist\AttendanceApp" (

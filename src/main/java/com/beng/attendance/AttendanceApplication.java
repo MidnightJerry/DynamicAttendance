@@ -13,37 +13,29 @@ public class AttendanceApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Create controller
         QRController controller = new QRController();
-
-        // Setup UI
         VBox root = controller.getView();
-        root.setStyle("-fx-background-color: white; -fx-padding: 10;");
 
-        Scene scene = new Scene(root, 300, 500); // Narrow vertical bar
+        Scene scene = new Scene(root, 320, 600);
 
-        // Window settings
         primaryStage.setTitle("Attendance QR");
         primaryStage.setScene(scene);
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setOpacity(0.7);
         primaryStage.initStyle(StageStyle.DECORATED);
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
 
-        // Position on right side of screen
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-        primaryStage.setX(screenBounds.getWidth() - 320);
+        primaryStage.setX(screenBounds.getWidth() - 340);
         primaryStage.setY(100);
 
         primaryStage.show();
 
-        // Start updating QR codes
         controller.startUpdating();
     }
 
     @Override
     public void stop() {
-        // Cleanup when app closes
         System.exit(0);
     }
 }
