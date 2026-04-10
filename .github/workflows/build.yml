@@ -1,4 +1,4 @@
-name: Build Native Executables
+name: Build Attendance App
 
 on:
   workflow_dispatch:
@@ -22,14 +22,18 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build JAR file
-        run: ./gradlew jar
-        shell: bash
+      - name: Fix gradlew permissions
+        if: runner.os != 'Windows'
+        run: chmod +x gradlew
 
-      - name: Get JAR filename
-        id: jar_name
-        run: |
-          echo "jar_file=$(find build/libs -name "*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)" >> $GITHUB_OUTPUT
+      - name: Build JAR (Windows)
+        if: runner.os == 'Windows'
+        run: gradlew.bat jar --no-daemon
+        shell: cmd
+
+      - name: Build JAR (macOS/Linux)
+        if: runner.os != 'Windows'
+        run: ./gradlew jar --no-daemon
         shell: bash
 
       - name: Create Windows executable
@@ -38,11 +42,10 @@ jobs:
           mkdir dist
           jpackage --type app-image `
             --input build/libs `
-            --main-jar ${{ steps.jar_name.outputs.jar_file }} `
+            --main-jar dynamic-attendance-1.0.0.jar `
             --main-class com.dynamicattendance.Main `
             --name AttendanceApp `
-            --dest dist `
-            --win-console
+            --dest dist
           Compress-Archive -Path dist\AttendanceApp -DestinationPath AttendanceApp-Windows.zip
         shell: powershell
 
@@ -52,11 +55,12 @@ jobs:
           mkdir -p dist
           jpackage --type app-image \
             --input build/libs \
-            --main-jar "${{ steps.jar_name.outputs.jar_file }}" \
+            --main-jar dynamic-attendance-1.0.0.jar \
             --main-class com.dynamicattendance.Main \
             --name AttendanceApp \
             --dest dist
           zip -r AttendanceApp-macOS.zip dist/AttendanceApp.app
+        shell: bash
 
       - name: Create Linux executable
         if: runner.os == 'Linux'
@@ -64,11 +68,12 @@ jobs:
           mkdir -p dist
           jpackage --type app-image \
             --input build/libs \
-            --main-jar "${{ steps.jar_name.outputs.jar_file }}" \
+            --main-jar dynamic-attendance-1.0.0.jar \
             --main-class com.dynamicattendance.Main \
             --name AttendanceApp \
             --dest dist
           zip -r AttendanceApp-Linux.zip dist/AttendanceApp
+        shell: bash
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
